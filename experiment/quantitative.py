@@ -10,6 +10,7 @@ from dataset.dataset import TestDataset
 from database.db import Database
 from utils.inference_utils import *
 from utils.uliege_utils import *
+from tqdm import tqdm
 
 # -------------------------------------------------------------------------------------------
 # Helper functions
@@ -27,8 +28,8 @@ def are_equivalent(proj_im, proj_retr):
             return True
     return False
 
-def compute_uliege(names, query, accuracies, predictions, data, weights):
-    similar = names[:5]
+def compute_uliege(top10_path, query, accuracies, predictions, data, weights):
+    
     temp = []
 
     class_im = get_class(query)
@@ -36,18 +37,18 @@ def compute_uliege(names, query, accuracies, predictions, data, weights):
     idx_class = 0 if len(data.classes) == 1 else data.conversion[class_im]
 
     # Proportion of correct image at each step
-    prop = [1 if get_class(n) == class_im else 0 for n in names]
+    prop = [1 if get_class(n) == class_im else 0 for n in top10_path]
 
     # Evolution of proportion (cumulative average)
     ev_prop = [prop[0]]
-    for i in range(1, len(names)):
+    for i in range(1, len(top10_path)):
         ev_prop.append((prop[i] + ev_prop[i-1] * i) / (i + 1))
 
     # Counters for majority vote
     counts = np.zeros(3)  # class, proj, sim
 
     # Loop over top-5 results
-    for j, retr in enumerate(similar):
+    for j, retr in enumerate(top10_path[:5]):
         class_retr = get_class(retr)
         proj_retr = get_proj(retr)
         temp.append(class_retr)
@@ -87,32 +88,34 @@ def compute_uliege(names, query, accuracies, predictions, data, weights):
     predictions[1].append(data.conversion[max(set(temp), key = temp.count)])
     return predictions, accuracies, prop
 
-def compute_results(names, query, accuracies, predictions, data, weights):
-    similar = names[:5]
+def compute_results(top10_path, query, accuracies, predictions, data, weights):
     temp = []
 
     class_im = get_class(query)
     idx_class = 0 if len(data.classes) == 1 else data.conversion[class_im]
-
+    
+    # Update top-1 prediction for confusion matrix
+    top1_class = get_class(top10_path[0])
+    predictions[0].append(data.conversion.get(top1_class, len(data.conversion)))
+    temp.append(top1_class)
     # Counters for majority vote
     count = 0
 
-    # Loop over top-5 results
-    for j, retr in enumerate(similar):
+    # Top-1
+    if class_im == get_class(top10_path[0]):
+        accuracies[0] += weights[idx_class]
+        accuracies[1] += weights[idx_class]
+        count += 1
+    
+    # Top-5
+    for j, retr in enumerate(top10_path[1:5]):
         class_retr = get_class(retr)
         temp.append(class_retr)
-
-        # Add top-1 prediction for confusion matrix
-        if j == 0:
-            unknown_idx = len(data.conversion)
-            predictions[0].append(data.conversion.get(class_retr, unknown_idx))
-            if class_retr == class_im:
-                count += 1
-                accuracies[0] += weights[idx_class]
-        
-        elif class_retr == class_im:
+        if class_retr == class_im:
             accuracies[1] += weights[idx_class]
             count += 1
+    
+    # Maj accuracy
     if count > 2:
         accuracies[2] += weights[idx_class]
     predictions[1].append(data.conversion[max(set(temp), key = temp.count)])
@@ -122,7 +125,7 @@ def compute_results(names, query, accuracies, predictions, data, weights):
 def inference(model, db_name, data_name, data_path, measure, project_name = None, class_name = None):
 
     # Load database
-    database = Database(db_name, model, True)
+    database = Database(filename = db_name, model = model, load = True)
 
     # Load data 
     data = TestDataset(data_path, measure, project_name, class_name)
@@ -131,7 +134,7 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
     
     # Load weights 
     if measure == 'weighted':
-        weights = data.weights
+        weights = data.weights # pre computer during data loading if specific measure
     elif measure == 'remove':
         weights = np.ones(len(data.conversion))
     else:
@@ -145,21 +148,16 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
     props = np.zeros((10,1)) # Proportion of correct images in the first n retrieved images
 
     nbr_per_class = Counter()
-
-
-    ground_truth = []
+    ground_truth = [] # will contain the ground truth labels (in integer)
     predictions = [[], []]
     
-    t_search = 0
-    t_model = 0
-    t_transfer = 0
-    t_tot = 0
+    t_search, t_model, t_transfer, t_tot = 0
 
     # For each image in the dataset, search for the 10 most similar images in the database and compute the accuracy
-    for i, (image_tensor, image_name) in enumerate(loader):
+    for i, (image_tensor, image_name) in tqdm(enumerate(loader)):
         # Search for the 10 most similar images in the database
         t = time.time()
-        names, _, t_model_tmp, t_search_tmp, t_transfer_tmp = database.search(image_tensor, 10)
+        top10_path, _, t_model_tmp, t_search_tmp, t_transfer_tmp = database.search(image_tensor, 10)
 
         t_tot += time.time() - t
         t_model += t_model_tmp
@@ -172,9 +170,10 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
 
         # Compute accuracy 
         if data_name == 'uliege':
-            predictions, accuracies, prop = compute_uliege(names, image_name[0], accuracies, predictions, data, weights)
+            predictions, accuracies, prop = compute_uliege(top10_path, image_name[0], accuracies, predictions, data, weights)
         else:
-            predictions, accuracies, prop = compute_results(names, image_name[0], accuracies, predictions, data, weights)
+            predictions, accuracies, prop = compute_results(top10_path, image_name[0], accuracies, predictions, data, weights)
+        
         for el in range(len(prop)):
             props[el] += prop[el]
     
@@ -220,9 +219,10 @@ def test_each_class(model, db_name, data_name, data_path,  measure, excel_path):
     # Write the results in an Excel file
     write_class_results_xlsx(excel_path, data_name, data_path, model, res, classes)
 
+
 def full_test(model, db_name, data_name, data_path, measure, log_filename, stat = False, nb_exp = 5, project_name = None, class_name = None):
     if stat:
-        if data_name == 'uliege':
+        if data_name == 'uliege': # accuracies at the image level but also at the project and group level
             accuracies = np.zeros((3,3, nb_exp))
         else:
             accuracies = np.zeros((3,1, nb_exp))

@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import random
 import time
 import models
@@ -30,16 +30,23 @@ def random_query_list(path):
             query_list.append(img)
     return query_list
 
-def log_result(log_path, model_name, query_path, top1_path, results_dir):
-    """Append results to Excel log file"""
-    new_entry = pd.DataFrame([{
+def log_result(log_path, model_name, query_path, top10_paths, results_dir):
+    
+
+    # Build the row dictionary dynamically
+    row = {
         "model": model_name,
         "query": query_path,
-        "top1": top1_path,
         "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "results_dir": results_dir
+    }
 
-    }])
+    # Add top1 to top10 columns
+    row.update({f"top{i+1}": top10_paths[i] for i in range(10)})
+
+    # Convert to DataFrame
+    new_entry = pd.DataFrame([row])
+
 
     if os.path.exists(log_path):
         df = pd.read_excel(log_path)
@@ -75,15 +82,15 @@ def multi_query_multi_models(log_path, models_name_list, queries_path, results_d
         for j, query_path in enumerate(queries_path):
             class_name = get_class(query_path)
             # Retrieve the most similar images
-            top1_path, _, _, _, _ = database.search(Image.open(query_path).convert('RGB'), 1)
+            top_path, _, _, _, _ = database.search(Image.open(query_path).convert('RGB'), 10)
 
             # Add to subplot figure
-            axes_list[j][i+1].imshow(Image.open(top1_path).convert('RGB'))
+            axes_list[j][i+1].imshow(Image.open(top_path[0]).convert('RGB'))
             axes_list[j][i+1].set_title(f"{class_name}\n{model_name}", fontsize=6)
             axes_list[j][i+1].axis('off')
 
             # Log to Excel
-            log_result(log_path, model_name, query_path, top1_path, results_dir)
+            log_result(log_path, model_name, query_path, top_path, results_dir)
 
     for i, fig in enumerate(fig_list):
         fig.tight_layout()
@@ -121,21 +128,21 @@ def one_query_all_models(log_path, models_name_list, query_path, results_dir, we
         print("T_indexing = "+str(time.time() - t))
 
         # Retrieve the most similar images
-        top1_path, _, _, _, _ = database.search(Image.open(query_path).convert('RGB'), 1)
+        top_path, _, _, _, _ = database.search(Image.open(query_path).convert('RGB'), 10)
 
         # Figure 3- nb_models + 2: save top1 image for each model
         plt.figure()
-        plt.imshow(Image.open(top1_path).convert('RGB'))
+        plt.imshow(Image.open(top_path[0]).convert('RGB'))
         plt.axis('off')
         plt.savefig(os.path.join(results_dir, f"Top1_{class_name}_{model_name}_{i}.png"))
 
         # Add to subplot figure
-        axes[i].imshow(Image.open(top1_path).convert('RGB'))
+        axes[i].imshow(Image.open(top_path[0]).convert('RGB'))
         axes[i].set_title(f"{class_name}\n{model_name}", fontsize=6)
         axes[i].axis('off')
 
         # Log to Excel
-        log_result(log_path, model_name, query_path, top1_path, results_dir)
+        log_result(log_path, model_name, query_path, top_path, results_dir)
 
     # Save subplot with all results
     plt.tight_layout()
@@ -156,8 +163,17 @@ def one_query_one_model(log_path, model_name, model_weight, device, query_path, 
     else:
         database = Database("db", model, load=True)
 
+    # Define the same transform used for your training/feature extraction
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),   # match model input
+        transforms.ToTensor(),           # convert to tensor [0,1]
+    ])
+
+    query_im = Image.open(query_path).convert('RGB')
+    query_tensor = transform(query_im).unsqueeze(0)  # add batch dimension
+
     # Retrieve the most similar images
-    names, _, _, _, _ = database.search(Image.open(query_path).convert('RGB'), 10)
+    names, _, _, _, _ = database.search(query_tensor, 10)
 
     # --- Save query image ---
     query_img = Image.open(query_path).convert('RGB')
