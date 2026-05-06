@@ -1,0 +1,14 @@
+------------------------------------------------------------------------
+Results of the inference:
+Model: dinov3
+Measure: all
+Date and time: 2026-05-01 13:12:59
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/uliege/validation
+
+top_1_acc: [0.73606687 0.93315013 0.9332334 ]
+top_5_acc: [0.91707784 0.97355984 0.97364312]
+maj_acc: [0.74538338 0.9324631  0.93260883]
+t_tot: 963.8732
+t_model: 834.0479
+t_search: 120.3093
+t_transfer: 2.6666

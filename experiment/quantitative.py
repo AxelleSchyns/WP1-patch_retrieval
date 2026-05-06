@@ -65,20 +65,12 @@ def compute_uliege(top10_path, query, accuracies, predictions, data, weights):
             (are_equivalent(proj_im, proj_retr) or proj_retr == proj_im, 2)     # equivalent project
         ]
 
-        """for cond, k in conditions:
-            if cond:
-                if j == 0:
-                    accuracies[0, k] += weights[idx_class]
-                if counts[k] == 0:
-                    accuracies[1, k] += weights[idx_class]
-                counts[k] += 1"""
         for cond, k in conditions:
             if cond:
                 if j == 0:
                     accuracies[0, k] += weights[idx_class]
                 if counts[k] == 0:
                     accuracies[1, k] += weights[idx_class]
-
                 counts[k] += 1
 
     # Majority vote accuracy
@@ -151,7 +143,10 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
     ground_truth = [] # will contain the ground truth labels (in integer)
     predictions = [[], []]
     
-    t_search, t_model, t_transfer, t_tot = 0
+    t_search = 0
+    t_model = 0 
+    t_transfer = 0 
+    t_tot = 0
 
     # For each image in the dataset, search for the 10 most similar images in the database and compute the accuracy
     for i, (image_tensor, image_name) in tqdm(enumerate(loader)):

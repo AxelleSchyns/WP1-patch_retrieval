@@ -21,6 +21,7 @@ from torchvision import models as torchvision_models
 from transformers import DeiTForImageClassification, ViTModel, AutoModel
 import models.resnet_ret as ResNet_ret
 from torchvision import models as torchvision_models
+REPO_DIR = '/home/labsig/Documents/Axelle/Main research/ext_models/dinov3-main' 
 
 
 def load_arch(name):
@@ -38,7 +39,13 @@ def load_arch(name):
         elif name == "dino_vit":
             model = DINO("vit_small")
             dim = 384
-
+        elif name == "dinov3":
+            #model = torch.hub.load(REPO_DIR, 'dinov3_vitl16', source='local', weights=REPO_DIR+'/finetuned_dino_L/eval/training_124999/teacher_checkpoint.pth')
+            #model = AutoModel.from_pretrained("facebook/dinov3-vits16-pretrain-lvd1689m")
+            #dim = 384
+            # Use the Large variant
+            model = AutoModel.from_pretrained("facebook/dinov3-vitl16-pretrain-lvd1689m")
+            dim = 1024  # ViT-Large hidden dimension
         elif name == "ret_ccl":
             model = ResNet_ret.resnet50(num_classes=128, mlp=False, two_branch=False, normlinear=True)
             dim = 2048
