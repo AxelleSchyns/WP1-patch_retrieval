@@ -18,7 +18,7 @@ def loading_weights(model, model_name, weight, device):
             model.fc = nn.Identity()
             model.load_state_dict(pretext_model, strict=True)
 
-        elif model_name in ["phikon", "phikon2", "hoptim", "uni2",  "hoptim1", "virchow2"]: 
+        elif model_name in ["phikon", "phikon2", "hoptim", "uni2", "hoptim1", "virchow2"]:
             pass
 
         elif model_name == "ctranspath":
