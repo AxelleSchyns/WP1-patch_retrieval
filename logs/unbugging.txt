@@ -261,3 +261,134 @@ t_tot: 0.2453
 t_model: 0.2104
 t_search: 0.0291
 t_transfer: 0.0012
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2025-09-26 16:27:11
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/our/validation
+
+top_1_acc: [0.81837487 0.94500656 0.9458185 ]
+top_5_acc: [0.9292882  0.96640851 0.96722045]
+maj_acc: [0.84296213 0.9451627  0.94612038]
+t_tot: 399.3357
+t_model: 313.5957
+t_search: 76.7399
+t_transfer: 2.4342
+------------------------------------------------------------------------
+Results of the inference:
+Model: hoptim
+Measure: all
+Date and time: 2025-09-26 17:15:11
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/our/validation
+
+top_1_acc: [0.75849937 0.90604376 0.91730685]
+top_5_acc: [0.88786876 0.94049924 0.95062769]
+maj_acc: [0.78423167 0.91917015 0.93138051]
+t_tot: 1772.5035
+t_model: 1624.6798
+t_search: 139.8535
+t_transfer: 2.4627
+------------------------------------------------------------------------
+Results of the inference:
+Model: uni2
+Measure: all
+Date and time: 2025-09-26 18:08:42
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/our/validation
+
+top_1_acc: [0.78886391 0.91854558 0.93039161]
+top_5_acc: [0.90169259 0.94145692 0.95165823]
+maj_acc: [0.79876335 0.917692   0.93087044]
+t_tot: 1629.0576
+t_model: 1483.1252
+t_search: 138.4627
+t_transfer: 2.3626
+------------------------------------------------------------------------
+Results of the inference:
+Model: hoptim
+Measure: all
+Date and time: 2025-10-16 13:29:44
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/uliege/sub_fold_test/val
+
+top_1_acc: [0.73988439 1.         1.        ]
+top_5_acc: [0.87861272 1.         1.        ]
+maj_acc: [0.74566474 1.         1.        ]
+t_tot: 2.9859
+t_model: 2.8889
+t_search: 0.0835
+t_transfer: 0.0041
+------------------------------------------------------------------------
+Results of the inference:
+Model: hoptim
+Measure: all
+Date and time: 2025-10-16 13:47:10
+Project: cells_no_aug_1
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/uliege/sub_fold_test/val
+
+top_1_acc: [0.36538462 1.         1.        ]
+top_5_acc: [0.59615385 1.         1.        ]
+maj_acc: [0.26923077 1.         1.        ]
+t_tot: 0.8982
+t_model: 0.8682
+t_search: 0.0258
+t_transfer: 0.0012
+------------------------------------------------------------------------
+Results of the inference:
+Model: hoptim
+Measure: all
+Date and time: 2025-10-16 13:48:04
+Project: cells_no_aug_0
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/uliege/sub_fold_test/val
+
+top_1_acc: [0.90082645 1.         1.        ]
+top_5_acc: [1. 1. 1.]
+maj_acc: [0.95041322 1.         1.        ]
+t_tot: 2.1195
+t_model: 2.0540
+t_search: 0.0553
+t_transfer: 0.0031
+------------------------------------------------------------------------
+Results of the inference:
+Model: hoptim1
+Measure: all
+Date and time: 2025-10-16 14:22:33
+Project: cells_no_aug_0
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/uliege/sub_fold_test/val
+
+top_1_acc: [0.88429752 1.         1.        ]
+top_5_acc: [0.99173554 1.         1.        ]
+maj_acc: [0.91735537 1.         1.        ]
+t_tot: 2.1013
+t_model: 2.0305
+t_search: 0.0604
+t_transfer: 0.0031
+------------------------------------------------------------------------
+Results of the inference:
+Model: hoptim1
+Measure: all
+Date and time: 2025-10-16 14:23:14
+Project: cells_no_aug_1
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/uliege/sub_fold_test/val
+
+top_1_acc: [0.38461538 1.         1.        ]
+top_5_acc: [0.53846154 1.         1.        ]
+maj_acc: [0.36538462 1.         1.        ]
+t_tot: 0.9251
+t_model: 0.8939
+t_search: 0.0266
+t_transfer: 0.0013
+------------------------------------------------------------------------
+Results of the inference:
+Model: uni2
+Measure: all
+Date and time: 2025-10-16 14:25:33
+Project: cells_no_aug_1
+Data: uliege found in Data path: /home/labsig/Documents/Axelle/Main research/Data/uliege/sub_fold_test/val
+
+top_1_acc: [0.23076923 1.         1.        ]
+top_5_acc: [0.67307692 1.         1.        ]
+maj_acc: [0.23076923 1.         1.        ]
+t_tot: 0.7730
+t_model: 0.7409
+t_search: 0.0272
+t_transfer: 0.0014
