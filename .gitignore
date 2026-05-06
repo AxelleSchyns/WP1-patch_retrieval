@@ -1,3 +1,5 @@
 # Ignore the weight_fold directory
 weights_fold/
 db
+__pycache__/
+*.pyc
