@@ -1,5 +1,16 @@
-# Ignore the weight_fold directory
-weights_fold/
-db
+# Environment & IDE
+.venv/
+.idea/
+.vscode/
+.DS_Store
+
+# Python Packaging & Build Artifacts
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Database & Data Files
+db
+
+
