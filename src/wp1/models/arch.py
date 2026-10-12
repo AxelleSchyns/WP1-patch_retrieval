@@ -18,7 +18,7 @@ from lightly.loss import NegativeCosineSimilarity
 from timm.models.layers import to_2tuple
 from torch import Tensor
 from torchvision import models as torchvision_models
-from transformers import DeiTForImageClassification, ViTModel, AutoModel
+from transformers import DeiTForImageClassification, ViTModel, AutoModel, AutoConfig
 from wp1.models.vision_transformer import DINOHead
 import wp1.models.resnet_ret as ResNet_ret
 REPO_DIR = '/home/labsig/Documents/Axelle/Main research/ext_models/dinov3-main' 
@@ -36,16 +36,22 @@ def load_arch(name):
             model.classifier = torch.nn.Linear(model.classifier.in_features, 128)
             dim = 128
 
-        elif name == "dino_vit":
-            model = DINO("vit_small")
-            dim = 384
-        elif name == "dinov3":
+        elif "dinov3" in name:
             #model = torch.hub.load(REPO_DIR, 'dinov3_vitl16', source='local', weights=REPO_DIR+'/finetuned_dino_L/eval/training_124999/teacher_checkpoint.pth')
             #model = AutoModel.from_pretrained("facebook/dinov3-vits16-pretrain-lvd1689m")
             #dim = 384
             # Use the Large variant
-            model = AutoModel.from_pretrained("facebook/dinov3-vitl16-pretrain-lvd1689m")
+            cfg = AutoConfig.from_pretrained("facebook/dinov3-vitl16-pretrain-lvd1689m")
+            if "pre" not in name:
+                cfg.num_register_tokens = 0
+                cfg.key_bias = True
+                cfg.pos_embed_rescale = None
+            model = AutoModel.from_config(cfg).eval()
             dim = 1024  # ViT-Large hidden dimension
+        elif "dino" in name:
+            model = DINO("vit_small")
+            dim = 384
+
         elif name == "ret_ccl":
             model = ResNet_ret.resnet50(num_classes=128, mlp=False, two_branch=False, normlinear=True)
             dim = 2048
@@ -54,20 +60,20 @@ def load_arch(name):
             model = cdpath()
             dim = 512
 
-        elif name == "phikon":
+        elif name == "phikon_v1":
             model = ViTModel.from_pretrained("owkin/phikon", add_pooling_layer=False)
             model.config.use_cache = False
             dim = 768
 
-        elif name == "phikon2":
+        elif name == "phikon_v2":
             model = AutoModel.from_pretrained("owkin/phikon-v2")
             dim = 1024
 
-        elif name == "ibot_vits":
+        elif "ibot" in name:
             model = iBot("vit_small")
             dim = 384
 
-        elif name == "byol_light":
+        elif "byol" in name:
             model = BYOL(67)
             dim = 256
 
@@ -75,13 +81,13 @@ def load_arch(name):
             model = ctranspath()
             dim = 768
 
-        elif name == "uni":
+        elif name == "uni_v1":
             model = timm.create_model("vit_large_patch16_224", pretrained=True, 
                                     img_size=224, patch_size=16, init_values=1e-5, 
                                     num_classes=0, dynamic_img_size=True)
             dim = 1024
 
-        elif name == "uni2":
+        elif name == "uni_v2":
             from timm.layers import SwiGLUPacked
             timm_kwargs = {
                 'img_size': 224,
@@ -101,17 +107,17 @@ def load_arch(name):
             model = timm.create_model("hf-hub:MahmoodLab/UNI2-h", pretrained=True, **timm_kwargs)
             dim = 1536
 
-        elif name == "hoptim":
+        elif name == "hoptim_v0":
             model = timm.create_model("hf-hub:bioptimus/H-optimus-0", pretrained=True,
                                     init_values=1e-5, dynamic_img_size=False)
             dim = 1536
 
-        elif name == "hoptim1":
+        elif name == "hoptim_v1":
             model = timm.create_model("hf-hub:bioptimus/H-optimus-1", pretrained=True,
                                     init_values=1e-5, dynamic_img_size=False)
             dim = 1536
 
-        elif name == "virchow2":
+        elif name == "virchow_v2":
             from timm.layers import SwiGLUPacked
             model = timm.create_model("hf-hub:paige-ai/Virchow2", pretrained=True,
                                     mlp_layer=SwiGLUPacked, act_layer=torch.nn.SiLU)
@@ -252,7 +258,7 @@ class DINO():
         ))
         self.model = self.model.backbone
     def load_weights(self, weight_path):
-        state_dict = torch.load(weight_path)
+        state_dict = torch.load(weight_path, weights_only=False)
         if 'student' in state_dict.keys():
             # remove `module.` prefix
             state_dict = {k.replace("module.", ""): v for k, v in state_dict['student'].items()}
@@ -307,7 +313,7 @@ class iBot():
     def load_weights(self, weight_path):
         # load pretrained weights
         if os.path.isfile(weight_path):
-            state_dict = torch.load(weight_path)
+            state_dict = torch.load(weight_path, weights_only=False)
             
             # Uncomment this line if using the pre-trained weights
             try:

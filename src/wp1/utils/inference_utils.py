@@ -206,7 +206,6 @@ def write_full_results_xlsx(filename, data_name, data_path, model, measure, accu
             final_df.to_excel(writer, sheet_name=data_name,
                               index=False, startrow=startrow, header=(startrow==0))
 
-
 def write_class_results_xlsx(filename, data_name, data_path, model, results, classes):
     # Metadata row as a DataFrame
     meta = {
