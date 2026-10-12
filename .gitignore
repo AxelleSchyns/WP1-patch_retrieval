@@ -12,5 +12,6 @@ __pycache__/
 
 # Database & Data Files
 db
+/database/db/
 
 
