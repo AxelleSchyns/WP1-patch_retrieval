@@ -10,6 +10,9 @@ import numpy as np
 
 from tqdm import tqdm
 from wp1.dataset.dataset import AddDataset
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
+DB_DIRECTORY = BASE_DIR / "db"
 
 # Class that represents the database
 class Database:
@@ -17,7 +20,7 @@ class Database:
         self.num_features = model.num_features
         self.model = model
         self.device = device
-        self.filename = filename
+        self.filename = str(DB_DIRECTORY / filename)
 
         res = faiss.StandardGpuResources()  # Allocation of streams and temporary memory 
 
@@ -229,6 +232,7 @@ class Database:
 
 
     def save(self):
+        print(self.filename)
         # 1. Save FAISS index
         if 'cuda' in self.device: 
             faiss.write_index(faiss.index_gpu_to_cpu(self.index), self.filename)
