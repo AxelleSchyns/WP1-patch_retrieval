@@ -1,13 +1,15 @@
-import json
-import numpy as np
+
 import faiss
-from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
-from argparse import ArgumentParser
-import utils
 import redis
 import time
-import seaborn as sns
+
+import matplotlib.pyplot as plt
+import numpy as np
+from argparse import ArgumentParser
+from sklearn.manifold import TSNE
+
+from wp1.utils.uliege_utils import get_class
+
 if __name__ == "__main__":
 
     parser = ArgumentParser()
@@ -33,7 +35,7 @@ if __name__ == "__main__":
     
     for l in labels:
         n = r.get(str(l)).decode('utf-8')
-        names.append(utils.get_class(n))    
+        names.append(get_class(n))    
     
     classes = list(set(names))
     classes.sort()

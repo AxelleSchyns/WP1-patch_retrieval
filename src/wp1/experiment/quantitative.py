@@ -1,4 +1,3 @@
-from collections import Counter
 import torch
 import os
 import time
@@ -6,11 +5,14 @@ import time
 import numpy as np
 import pandas as pd
 
-from dataset.dataset import TestDataset
-from database.db import Database
-from utils.inference_utils import *
-from utils.uliege_utils import *
+from collections import Counter
 from tqdm import tqdm
+
+from wp1.dataset.dataset import TestDataset
+from wp1.database.db import Database
+from wp1.utils.inference_utils import *
+from wp1.utils.uliege_utils import *
+
 
 # -------------------------------------------------------------------------------------------
 # Helper functions
@@ -28,16 +30,15 @@ def are_equivalent(proj_im, proj_retr):
             return True
     return False
 
-def compute_uliege(top10_path, query, accuracies, predictions, data, weights):
-    
+def compute_uliege(top10_path, query, accuracies, predictions, data, weights):   
     temp = []
 
-    class_im = get_class(query)
-    proj_im = get_proj(query)
-    idx_class = 0 if len(data.classes) == 1 else data.conversion[class_im]
+    class_query = get_class(query)
+    proj_query = get_proj(query)
+    idx_query = 0 if len(data.classes) == 1 else data.conversion[class_query]
 
     # Proportion of correct image at each step
-    prop = [1 if get_class(n) == class_im else 0 for n in top10_path]
+    prop = [1 if get_class(n) == class_query else 0 for n in top10_path]
 
     # Evolution of proportion (cumulative average)
     ev_prop = [prop[0]]
@@ -60,9 +61,9 @@ def compute_uliege(top10_path, query, accuracies, predictions, data, weights):
 
         # Define conditions dynamically
         conditions = [
-            (class_retr == class_im, 0),                # same class
-            (proj_retr == proj_im, 1),                  # same project
-            (are_equivalent(proj_im, proj_retr) or proj_retr == proj_im, 2)     # equivalent project
+            (class_retr == class_query, 0),                # same class
+            (proj_retr == proj_query, 1),                  # same project
+            (are_equivalent(proj_query, proj_retr) or proj_retr == proj_query, 2)     # equivalent project
         ]
 
         for cond, k in conditions:
@@ -81,37 +82,29 @@ def compute_uliege(top10_path, query, accuracies, predictions, data, weights):
     return predictions, accuracies, prop
 
 def compute_results(top10_path, query, accuracies, predictions, data, weights):
-    temp = []
+    class_query = get_class(query)
+    idx_class = 0 if len(data.classes) == 1 else data.conversion[class_query]
 
-    class_im = get_class(query)
-    idx_class = 0 if len(data.classes) == 1 else data.conversion[class_im]
-    
-    # Update top-1 prediction for confusion matrix
-    top1_class = get_class(top10_path[0])
-    predictions[0].append(data.conversion.get(top1_class, len(data.conversion)))
-    temp.append(top1_class)
-    # Counters for majority vote
-    count = 0
+    classes_retr = [get_class(p) for p in top10_path[:5]]
 
     # Top-1
-    if class_im == get_class(top10_path[0]):
+    if class_query == classes_retr[0]:
         accuracies[0] += weights[idx_class]
-        accuracies[1] += weights[idx_class]
-        count += 1
     
     # Top-5
-    for j, retr in enumerate(top10_path[1:5]):
-        class_retr = get_class(retr)
-        temp.append(class_retr)
-        if class_retr == class_im:
-            accuracies[1] += weights[idx_class]
-            count += 1
-    
-    # Maj accuracy
-    if count > 2:
+    if class_query in classes_retr:
+        accuracies[1] += weights[idx_class]
+
+    # Majority vote accuracy
+    class_count = Counter(classes_retr)
+    if class_count[class_query] > 2:
         accuracies[2] += weights[idx_class]
-    predictions[1].append(data.conversion[max(set(temp), key = temp.count)])
-    return predictions, accuracies
+
+
+    # Update top-1 and maj prediction for confusion matrix
+    predictions[0].append(data.conversion.get(classes_retr[0], len(data.conversion)))
+    predictions[1].append(data.conversion[max(set(classes_retr), key = classes_retr.count)])
+    return predictions, accuracies, None
 
 # Indexes the data in the database and computes the results
 def inference(model, db_name, data_name, data_path, measure, project_name = None, class_name = None):
@@ -124,14 +117,6 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
     loader = torch.utils.data.DataLoader(data, batch_size=1, shuffle=False,
                                          num_workers=4, pin_memory=True)
     
-    # Load weights 
-    if measure == 'weighted':
-        weights = data.weights # pre computer during data loading if specific measure
-    elif measure == 'remove':
-        weights = np.ones(len(data.conversion))
-    else:
-        weights = np.ones(len(data.classes))
-    
     # Compute the results at the class, the project and the origin level
     if data_name == 'uliege':
         accuracies = np.zeros((3,3))  
@@ -139,14 +124,10 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
         accuracies = np.zeros((3,1))
     props = np.zeros((10,1)) # Proportion of correct images in the first n retrieved images
 
-    nbr_per_class = Counter()
     ground_truth = [] # will contain the ground truth labels (in integer)
     predictions = [[], []]
-    
-    t_search = 0
-    t_model = 0 
-    t_transfer = 0 
-    t_tot = 0
+
+    t_search, t_model, t_transfer, t_tot = 0, 0, 0, 0
 
     # For each image in the dataset, search for the 10 most similar images in the database and compute the accuracy
     for i, (image_tensor, image_name) in tqdm(enumerate(loader)):
@@ -159,18 +140,16 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
         t_transfer += t_transfer_tmp
         t_search += t_search_tmp
 
-        nbr_per_class[get_class(image_name[0])] += 1
         ground_truth.append(data.conversion[get_class(image_name[0])])
-
 
         # Compute accuracy 
         if data_name == 'uliege':
-            predictions, accuracies, prop = compute_uliege(top10_path, image_name[0], accuracies, predictions, data, weights)
+            predictions, accuracies, prop = compute_uliege(top10_path, image_name[0], accuracies, predictions, data, data.weights)
         else:
-            predictions, accuracies, prop = compute_results(top10_path, image_name[0], accuracies, predictions, data, weights)
+            predictions, accuracies, prop = compute_results(top10_path, image_name[0], accuracies, predictions, data, data.weights)
         
-        for el in range(len(prop)):
-            props[el] += prop[el]
+        """for el in range(len(prop)):
+            props[el] += prop[el]"""
     
     if measure == 'weighted':
         s = len(data.classes) # In weighted, each result was already divided by the length of the class
@@ -178,8 +157,9 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
         s = data.__len__()
 
     accuracies = accuracies / s
-    props = props / s
-
+    """props = props / s"""
+    print(accuracies)
+    print(s)
     return [accuracies, t_tot, t_model, t_search, t_transfer]
     
 # -------------------------------------------------------------------------------------------
@@ -188,9 +168,9 @@ def inference(model, db_name, data_name, data_path, measure, project_name = None
 def test_each_class(model, db_name, data_name, data_path,  measure, excel_path):
     classes = sorted(os.listdir(data_path))
     if data_name == 'uliege':
-        res = np.zeros((len(classes), 13))
+        res = np.zeros((len(classes), 13)) # Top-1, Top-5, Maj for class, project and equivalent project  + t_tot, t_model, t_search, t_transfer
     else:
-        res = np.zeros((len(classes), 7))
+        res = np.zeros((len(classes), 7)) # Top-1, Top-5, Maj for class + t_tot, t_model, t_search, t_transfer
 
     # Compute the results for each class
     for i, c in enumerate(classes):

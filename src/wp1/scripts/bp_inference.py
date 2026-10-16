@@ -5,10 +5,10 @@ import torch
 import os
 import numpy as np
 
-from models.model import Model
+from wp1.models.model import Model
 from tqdm import tqdm
-from database.db import Database
-from experiment.quantitative import full_test, test_each_class
+from wp1.database.db import Database
+from wp1.experiment.quantitative import full_test, test_each_class
 from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image

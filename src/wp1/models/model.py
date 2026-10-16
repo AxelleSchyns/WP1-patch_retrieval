@@ -92,7 +92,7 @@ def loading_weights(model, model_name, weight, device):
             pass
         else:
             try:
-                checkpoint = torch.load(weight)
+                checkpoint = torch.load(weight, weights_only=False)
                 if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
                     state_dict = checkpoint["model_state_dict"]
                 elif isinstance(checkpoint, dict) and "state_dict" in checkpoint:

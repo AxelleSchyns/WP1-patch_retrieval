@@ -1,0 +1,238 @@
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-14 16:50:06
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7676
+top_5_acc: 3.8075
+maj_acc: 0.7857
+t_tot: 236.9523
+t_model: 176.4108
+t_search: 53.9169
+t_transfer: 1.6721
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-14 16:55:55
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7676
+top_5_acc: 3.8075
+maj_acc: 0.7857
+t_tot: 235.3514
+t_model: 175.2074
+t_search: 53.5674
+t_transfer: 1.6878
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-14 17:07:09
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7616
+top_5_acc: 0.8839
+maj_acc: 0.7410
+t_tot: 232.0252
+t_model: 173.4625
+t_search: 52.0401
+t_transfer: 1.6936
+------------------------------------------------------------------------
+Results of the inference:
+Model: deit
+Measure: all
+Date and time: 2026-10-14 17:23:16
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.6930
+top_5_acc: 0.8542
+maj_acc: 0.6536
+t_tot: 316.5069
+t_model: 246.1695
+t_search: 63.4032
+t_transfer: 1.7422
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 10:50:27
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7620
+top_5_acc: 0.8829
+maj_acc: 0.7424
+t_tot: 236.8805
+t_model: 176.4911
+t_search: 53.8390
+t_transfer: 1.6936
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 14:31:41
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7622
+top_5_acc: 0.8831
+maj_acc: 0.7422
+t_tot: 222.9006
+t_model: 173.3227
+t_search: 43.1553
+t_transfer: 1.6518
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 17:03:03
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7676
+top_5_acc: 0.8915
+maj_acc: 0.7861
+t_tot: 228.0857
+t_model: 169.9111
+t_search: 52.0146
+t_transfer: 1.6377
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 17:08:47
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7676
+top_5_acc: 0.8915
+maj_acc: 0.7861
+t_tot: 233.0349
+t_model: 173.5498
+t_search: 53.2273
+t_transfer: 1.6817
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 17:16:34
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7620
+top_5_acc: 0.8829
+maj_acc: 0.7424
+t_tot: 242.7222
+t_model: 179.0262
+t_search: 56.9763
+t_transfer: 1.6938
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 17:35:48
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7622
+top_5_acc: 0.8831
+maj_acc: 0.7422
+t_tot: 219.7879
+t_model: 170.9352
+t_search: 42.4230
+t_transfer: 1.6506
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 17:58:32
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7622
+top_5_acc: 0.8831
+maj_acc: 0.7422
+t_tot: 224.4981
+t_model: 173.7498
+t_search: 44.1198
+t_transfer: 1.7077
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 18:30:55
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7620
+top_5_acc: 0.8829
+maj_acc: 0.7424
+t_tot: 235.3652
+t_model: 176.2859
+t_search: 52.5931
+t_transfer: 1.6811
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 18:36:31
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7676
+top_5_acc: 0.8915
+maj_acc: 0.7861
+t_tot: 227.4248
+t_model: 170.4828
+t_search: 50.5932
+t_transfer: 1.6431
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-15 18:47:50
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7674
+top_5_acc: 0.8916
+maj_acc: 0.7861
+t_tot: 214.4282
+t_model: 166.7899
+t_search: 41.2524
+t_transfer: 1.6212
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-16 12:02:23
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7674
+top_5_acc: 0.8916
+maj_acc: 0.7861
+t_tot: 216.8581
+t_model: 168.4401
+t_search: 42.0322
+t_transfer: 1.6706
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-16 12:24:35
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7677
+top_5_acc: 0.8943
+maj_acc: 0.7855
+t_tot: 216.4515
+t_model: 168.8817
+t_search: 41.2200
+t_transfer: 1.6274
+------------------------------------------------------------------------
+Results of the inference:
+Model: resnet
+Measure: all
+Date and time: 2026-10-16 13:53:53
+Data: cm17_changed found in Data path: /home/axelle/Documents/Doctorat/Main research/Data/patches/Camelyon17/cm17_changed/validation/
+
+top_1_acc: 0.7676
+top_5_acc: 0.8943
+maj_acc: 0.7857
+t_tot: 228.4824
+t_model: 170.8822
+t_search: 51.1878
+t_transfer: 1.6371

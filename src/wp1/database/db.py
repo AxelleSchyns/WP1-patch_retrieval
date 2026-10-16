@@ -5,22 +5,25 @@ import redis
 import time
 import gc
 import json
+import sys
 
 import numpy as np
 
 from tqdm import tqdm
 from wp1.dataset.dataset import AddDataset
+from wp1.models.model import Model
+from wp1.utils.inference_utils import get_weight
 from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 DB_DIRECTORY = BASE_DIR / "db"
 
 # Class that represents the database
 class Database:
-    def __init__(self, filename, model, load=False, device='cuda:0'):
-        self.num_features = model.num_features
-        self.model = model
-        self.device = device
+    def __init__(self, filename, model=None, load=False, device='cuda:0'):
         self.filename = str(DB_DIRECTORY / filename)
+        self.data_path = []
+        self.device = device
+        self.trained = False
 
         res = faiss.StandardGpuResources()  # Allocation of streams and temporary memory 
 
@@ -28,28 +31,49 @@ class Database:
         if load:
             try:
                 self.index = faiss.read_index(self.filename)
-            except RuntimeError as e:
-                print(f"Failed to load FAISS index: {e}")
+                self.r = redis.Redis(host='localhost', port=6379, db=0)
 
-            self.r = redis.Redis(host='localhost', port=6379, db=0)
-            json_path = f"{self.filename}.json"
-            try:
+                json_path = f"{self.filename}.json"
                 with open(json_path, 'r') as f:
-                    redis_data = json.load(f)
-                    if redis_data:
+                    payload = json.load(f)
+
+                self.vector_size = payload['vector_size']
+                self.data_path = payload['data_path']
+                self.device = payload['device']
+                self.trained = payload['trained']
+
+                self.model = Model(payload['model'], payload['weight_path'], self.device) if payload['model'] else None
+                if model and self.model.model_name != model.model_name:
+                    print(f"Warning: The model used to create the database ({self.model.model_name}) is different from the provided model ({model.model_name}).")
+                    print("The database will be used with the model it was created with.")
+                elif self.model is None:
+                    print("Warning: No model information found in the database metadata and no model provided. Exiting")
+                    sys.exit(1)
+                else: # just in case - but should not be triggered as model is saved in all db_files
+                    self.model = model
+
+                redis_data = payload.get('redis_data', {})
+                if redis_data:
                         self.r.mset(redis_data)
                 print(f"Loaded {len(redis_data)} keys into Redis.")
-            except FileNotFoundError:
-                print(f"Warning: No companion Redis JSON file found at {json_path}")
+            except Exception as e:
+                print(self.filename, json_path)
+                print(f"Failed to load database: {e}")
+                sys.exit(1)
         else:
             # Create a new database
             print("Creating a new FAISS index")
-            self.index = faiss.IndexFlatL2(self.num_features)
+            if model is None:
+                print("Error: No model provided for creating a new database. Exiting.")
+                sys.exit(1)
+            self.model = model
+            self.vector_size = model.num_features 
+            
+            self.index = faiss.IndexFlatL2(self.vector_size)
             self.index = faiss.IndexIDMap(self.index)
             self.r = redis.Redis(host='localhost', port=6379, db=0)
             self.r.flushdb()
             self.r.set('last_id', 0)  # Set a value in Redis with key = last_id
-
         if 'cuda' in device:
             print("Transferring index to GPU")
             try:
@@ -59,6 +83,13 @@ class Database:
                 print(f"Failed to transfer index to GPU: {e}")
     def __len__(self):
         return self.index.ntotal
+    
+    def __description__(self):
+        indexing = "trained" if self.trained else "untrained / brute_force"
+        return f"Database with {self.index.ntotal} vectors of size {self.vector_size} on device {self.device}. \n \
+            Vectors are obtained from model {self.model.model_name} using images from {self.data_path} and stored in FAISS index {self.filename}. \n \
+            Indexing method: {indexing}"
+
     # x = vector of images 
     def add(self, x, names):
         last_id = int(self.r.get('last_id').decode('utf-8'))
@@ -80,6 +111,8 @@ class Database:
         model_name = self.model.model_name
         model_device = next(model.parameters()).device
 
+        if data_root not in self.data_path:
+            self.data_path.append(data_root)
         data = AddDataset(data_root, model_name)
         loader = torch.utils.data.DataLoader(
             data, batch_size=32, num_workers=8, pin_memory=True, timeout=30, persistent_workers=False )
@@ -187,11 +220,11 @@ class Database:
         # TODO: save the free indexes and reuse them instead of incrementing the last_id
 
     def train_index(self):
+        if self.trained:
+            print("Index is already trained. Skipping training.")
+            return
         if 'cuda' in self.device:
             self.index = faiss.index_gpu_to_cpu(self.index)
-        if isinstance(self.index, faiss.IndexIVFFlat):
-            print("Notice: The index is already trained (IVF). Skipping training.")
-            return
         batch_size = 128
         x = []
         keys = []
@@ -207,8 +240,8 @@ class Database:
         if len(x) >= 10:
             num_clusters = int(np.sqrt(self.index.ntotal))
 
-            self.quantizer = faiss.IndexFlatL2(self.model.num_features)
-            self.index = faiss.IndexIVFFlat(self.quantizer, self.model.num_features,
+            self.quantizer = faiss.IndexFlatL2(self.vector_size)
+            self.index = faiss.IndexIVFFlat(self.quantizer, self.vector_size,
                                                     num_clusters)
 
             if 'cuda' in self.device:
@@ -229,10 +262,9 @@ class Database:
                     x_ = x[i * batch_size: (i + 1) * batch_size, :]
                     key = keys[i * batch_size: (i+1) * batch_size]
                 self.index.add_with_ids(x_, np.array(key, dtype=np.int64))
-
+        self.trained = True
 
     def save(self):
-        print(self.filename)
         # 1. Save FAISS index
         if 'cuda' in self.device: 
             faiss.write_index(faiss.index_gpu_to_cpu(self.index), self.filename)
@@ -241,10 +273,18 @@ class Database:
             
         # 2. Save Redis mappings to a JSON file alongside the index
         redis_data = {k.decode('utf-8'): self.r.get(k).decode('utf-8') for k in self.r.keys('*')}
+        payload = {
+            'index': self.filename,
+            'data_path': self.data_path,
+            'vector_size': self.vector_size,
+            'device': self.device,
+            'trained': self.trained,
+            'model': self.model.model_name if self.model else None,
+            "weight_path": self.model.weight if self.model else None,
+            'redis_data': redis_data
+        }
         json_path = f"{self.filename}.json"
-        print(f"Saving Redis data to {json_path}")
+        print(f"Saving database metadata and Redis data to {json_path}")
         with open(json_path, 'w') as f:
-            json.dump(redis_data, f)
-        print(f"Saved FAISS index and {len(redis_data)} Redis keys to disk.")
-        
-
+            json.dump(payload, f)
+        print(f"Saved FAISS index, metadata and Redis data to disk.")

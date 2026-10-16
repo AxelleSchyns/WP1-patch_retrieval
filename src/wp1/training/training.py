@@ -1,8 +1,8 @@
 import time
 
-from training.loss import *
-from dataset.dataset import *
-from utils.training_utils import *
+from wp1.training.loss import *
+from wp1.dataset.dataset import *
+from wp1.utils.training_utils import *
 
 def get_optim(model, data, loss, lr, decay, beta_lr, lr_proxies):
         if loss == 'margin':

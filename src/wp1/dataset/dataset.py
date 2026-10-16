@@ -201,10 +201,9 @@ class TestDataset(Dataset):
 
         # User has a specific classe whose results he wants to compute
         if class_name is not None:
-            for c in self.classes:
-                if c == class_name:
-                    self.classes = [c]
-                    break
+            if class_name not in self.classes:
+                raise ValueError(f"Class {class_name} not found in dataset {dataset_name}. Available classes: {self.classes}")
+            self.classes = [class_name]
 
         elif dataset_name == "uliege":
             self.classes = uliege_data_prep(project_name, self.classes, measure)
@@ -221,6 +220,7 @@ class TestDataset(Dataset):
             for i in self.classes:
                 for img in os.listdir(os.path.join(root, str(i))):
                     self.img_list.append(os.path.join(root, str(i), img))
+            self.weights = np.ones(len(self.classes))
 
 
     def __len__(self):
@@ -233,7 +233,7 @@ class TestDataset(Dataset):
         return self.transforms(img), self.img_list[idx]
 
 def uliege_data_prep(project_name, classes, measure):
-    # User has specify the project he wants to compute the results
+    # User has specify the project he wants to compute the results of
     if project_name is not None:
         start = False
         new_c = []
